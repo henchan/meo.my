@@ -1,0 +1,10 @@
+{
+    "couchdb": {
+        "views": [{
+            "cluster": {
+                "lists": ["byOffsets"]
+            }
+        }, "hitsByRange", "rangeByHits"],
+        "filters": []
+    }
+}
