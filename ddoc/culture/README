@@ -1,0 +1,15 @@
+There is one scope ddoc per scope
+This ddoc is a template and is not usually installed. Instead it is copied and modified by the control application
+
+for testing purposes, to manually install this design doc in a couchdb database 
+
+    install couchapp
+
+    $ cd meo_my/ddoc/culture
+
+    edit  user, password, host and db in .couchapprc default db string
+        "default" : {
+          "db" : "http://user:password@127.0.0.1:5984/db"
+        },
+
+    $ couchapp push 
