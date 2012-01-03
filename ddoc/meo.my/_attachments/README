@@ -1,1 +1,16 @@
-stub for meo.my couchapp web app code
+meo.my couchapp web app code
+
+This ddoc is the container for client side application code. 
+
+to  install this design doc in a couchdb database 
+
+    install couchapp
+
+    $ cd meo_my/ddoc/meo.my
+
+    edit  user, password, host and db in .couchapprc default db string
+        "default" : {
+          "db" : "http://user:password@127.0.0.1:5984/db"
+        },
+
+    $ couchapp push 

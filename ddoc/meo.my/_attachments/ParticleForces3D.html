@@ -1,0 +1,276 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <title>Simple 3D Particle distribution system</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+		<style type="text/css">
+			body {
+				margin: 0px;
+				overflow: hidden;
+                background-repeat:no-repeat;
+                background-position:right center;
+			}
+
+			a {
+				color:#0078ff;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script type="text/javascript" src="js/Three.js"></script>
+		<script type="text/javascript" src="js/Particle3D.js"></script>
+    	<script type="text/javascript" src="js/RequestAnimationFrame.js"></script>
+		<script type="text/javascript" src="js/Stats.js"></script>    
+
+		<script type="text/javascript">
+        
+            
+			var container, stats;
+			var camera, scene, renderer, projector, particle;
+			var mouseX = 0, mouseY = 0;
+			var particles = [],
+				MAX_PARTICLES = 30;
+			 
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+    		var radius = 600;
+			var theta = 0;
+
+    		function animate() {
+
+				requestAnimationFrame( animate );
+
+//				render();
+//				stats.update();
+
+			}
+
+			function addPart(){
+				makeParticle(1); 
+				if(particles.length<MAX_PARTICLES)
+					setTimeout(addPart, 50); 
+
+			}
+
+    		var PI2 = Math.PI * 2;
+
+        	var highlight = function ( context ) {
+                
+                // data url. Background is dynamically switched from thumbnail data stored on the model
+                var thumbnail = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
+                setThumb (thumbnail);
+                programFill  ( context );
+			}
+
+    		var programFill = function ( context ) {
+				context.beginPath();
+				context.arc( 0, 0, 1, 0, PI2, true );
+				context.closePath();
+				context.fill();
+			}
+
+			var programStroke = function ( context ) {
+				context.lineWidth = 0.05;
+				context.beginPath();
+				context.arc( 0, 0, 1, 0, PI2, true );
+				context.closePath();
+				context.stroke();
+			}
+            
+            var mouse = { x: 0, y: 0 }, INTERSECTED;
+
+			init();
+//            animate();
+			setInterval( loop, 1000 / 600 );
+
+			function init() {
+
+				container = document.createElement('div');
+				document.body.appendChild(container);
+
+//  			camera = new THREE.OrthographicCamera( 75, window.innerWidth / window.innerHeight, 1, 3000 );
+  			    camera = new THREE.Camera( 75, window.innerWidth / window.innerHeight, 1, 3000 );
+				camera.position.z = 100;
+
+				scene = new THREE.Scene();
+
+				projector = new THREE.Projector();
+
+				renderer = new THREE.CanvasRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+				document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+		
+				addPart();
+			}
+
+			//
+
+			function onDocumentMouseMove( event ) {
+
+//           		event.preventDefault();
+
+                mouseX = event.clientX - windowHalfX;
+				mouseY = event.clientY - windowHalfY;
+ 
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			}
+			function onDocumentMouseDown( event ) {
+
+				makeParticle(); 
+			}
+			function onDocumentTouchStart( event ) {
+
+				if ( event.touches.length == 1 ) {
+
+					event.preventDefault();
+
+					mouseX = event.touches[ 0 ].pageX - windowHalfX;
+					mouseY = event.touches[ 0 ].pageY - windowHalfY;
+				}
+			}
+
+			function onDocumentTouchMove( event ) {
+
+				if ( event.touches.length == 1 ) {
+
+					event.preventDefault();
+
+					mouseX = event.touches[ 0 ].pageX - windowHalfX;
+					mouseY = event.touches[ 0 ].pageY - windowHalfY;
+				}
+			}
+
+            function setThumb (thumbnail, format) {
+                
+                format = format || 'png';  
+                if (thumbnail) {
+                // when jQuery is included, prefer the more readable code below                
+                // $('body').css('background-image', 'url(data:image/png;base64,'+thumbnail+')');
+                  document.body.style.background='url(data:image/'+format+';base64,'+thumbnail+') no-repeat right center';
+                }
+                else {
+                  document.body.style.background=null;
+                    
+                }
+            }
+
+			function loop() {
+/* henchan
+				var repelforce = new THREE.Vector3(0,0,0),
+					mag, 
+					repelstrength; 
+
+				for (i=0; i<particles.length; i++){
+					var p1 = particles[i]; 
+					repelforce.copy(p1.position);
+	 				
+					mag = repelforce.length(); 
+	 				repelstrength = (mag - 100) *-0.1; 
+	 				if(repelstrength<0)  {
+						repelforce.multiplyScalar(repelstrength/mag);
+						p1.force.addSelf(repelforce); 
+					}
+					
+					if(i>=particles.length-1) continue; 
+					
+                    for(j=i+1; j<particles.length; j++) {
+						var p2 = particles[j];
+
+						repelforce.copy(p2.position); 
+						repelforce.subSelf(p1.position); 
+						mag = repelforce.length(); 
+						repelstrength = 50-mag; 
+
+						if((repelstrength>0)&&(mag>0))	{
+							repelforce.multiplyScalar(repelstrength*0.05 / mag); 
+							p1.force.subSelf(repelforce); 
+							p2.force.addSelf(repelforce); 
+						}
+                    }
+				}
+*/
+
+			  	// iteratate through each particle
+				for (i=0; i<particles.length; i++){
+					var particle = particles[i]; 
+					particle.update();				
+				}
+
+				camera.position.x += ( mouseX - camera.position.x ) * 0.05;
+				camera.position.y += ( - mouseY - camera.position.y ) * 0.05;
+                                
+    			var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
+				projector.unprojectVector( vector, camera );
+
+				var ray = new THREE.Ray( camera.position, vector.subSelf( camera.position ).normalize() );
+
+				var intersects = ray.intersectScene( scene );
+
+				if ( intersects.length > 0 ) {
+
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+
+						if ( INTERSECTED ) { 
+                            INTERSECTED.materials[ 0 ].program = programStroke; 
+                        }
+						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.materials[ 0 ].program = highlight;
+					}
+
+				} else {
+
+					if ( INTERSECTED ) INTERSECTED.materials[ 0 ].program = programStroke;
+
+					INTERSECTED = null;                    
+                    setThumb ();
+
+				}
+
+				renderer.render( scene, camera );
+
+				stats.update();
+			}
+			
+			
+			function makeParticle(color) {
+				
+				color = color || 0xd0 + Math.random()*0x20; 
+				color = color | color<<8 | color<<16; 
+    			particle = new THREE.Particle( new THREE.ParticleCanvasMaterial( { color: Math.random() * 0x808080 + 0x808080, program: programStroke } ) );
+		
+				particle.scale.x = particle.scale.y = 5;
+			
+				particle.position.set(0,0,0); 
+
+    			particle.position.x = Math.random() * 200 - 100;
+				particle.position.y = Math.random() * 200 - 100;
+				particle.position.z = Math.random() * 200 - 100;
+				particle.scale.x = particle.scale.y = Math.random() * 10 + 10;
+//    			scene.add( particle );
+				scene.addObject( particle );
+
+				particle.drag = 0.96;
+			
+				particles.push(particle); 
+			}
+
+		</script>
+		
+		
+	</body>
+</html>
